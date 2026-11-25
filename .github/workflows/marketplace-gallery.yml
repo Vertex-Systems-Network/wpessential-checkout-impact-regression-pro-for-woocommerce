@@ -1,0 +1,90 @@
+name: Capture actual Woo Marketplace gallery
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/marketplace-gallery.yml'
+      - 'tests/gallery/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    if: github.event_name == 'workflow_dispatch' || !github.event.repository.private
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: gallery-local-root
+          MARIADB_DATABASE: gallery
+          MARIADB_USER: gallery
+          MARIADB_PASSWORD: gallery-local-db
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: Vertex-Systems-Network/wpessential-checkout-impact-regression-for-woocommerce
+          ref: e4c03263a4b004e77fc805c23a5a17c600439045
+          path: free-repo
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2, wp-cli
+          extensions: mysqli, mbstring, curl, gd, zip
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Build and provision disposable store
+        env:
+          GALLERY_PASSWORD: gallery-local-test-only
+        run: |
+          set -euo pipefail
+          FREE_DIR=free-repo ./bin/build.sh
+          WP="$RUNNER_TEMP/gallery-wp"
+          mkdir -p "$WP"
+          wp --path="$WP" core download --version=7.1.5
+          wp --path="$WP" config create --dbname=gallery --dbuser=gallery --dbpass=gallery-local-db --dbhost=127.0.0.1:3306
+          wp --path="$WP" config set WPECIR_GALLERY_SANDBOX true --raw
+          wp --path="$WP" config set DISABLE_WP_CRON true --raw
+          wp --path="$WP" core install --url=http://127.0.0.1:8080 --title="Checkout Impact Demo" --admin_user=gallery-admin --admin_password="$GALLERY_PASSWORD" --admin_email=admin@example.test --skip-email
+          mkdir -p "$WP/wp-content/mu-plugins"
+          printf '%s\n' '<?php add_filter( "pre_wp_mail", "__return_true" );' > "$WP/wp-content/mu-plugins/gallery-block-mail.php"
+          wp --path="$WP" plugin install https://downloads.wordpress.org/plugin/woocommerce.11.3.1.zip --activate
+          cp -R free-repo/build/wpessential-checkout-impact-regression-for-woocommerce "$WP/wp-content/plugins/"
+          cp -R build/wpessential-checkout-impact-regression-pro-for-woocommerce "$WP/wp-content/plugins/"
+          wp --path="$WP" plugin activate wpessential-checkout-impact-regression-for-woocommerce
+          wp --path="$WP" plugin activate wpessential-checkout-impact-regression-pro-for-woocommerce
+          wp --path="$WP" eval-file "$GITHUB_WORKSPACE/tests/gallery/seed.php" --user=gallery-admin
+          php -S 127.0.0.1:8080 -t "$WP" > "$RUNNER_TEMP/gallery-server.log" 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:8080/wp-login.php >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Capture real admin screens
+        env:
+          GALLERY_PASSWORD: gallery-local-test-only
+        run: |
+          npm install --no-save --prefix "$RUNNER_TEMP/gallery-browser" playwright@1.58.2
+          "$RUNNER_TEMP/gallery-browser/node_modules/.bin/playwright" install --with-deps chromium
+          NODE_PATH="$RUNNER_TEMP/gallery-browser/node_modules" node tests/gallery/capture.cjs "$RUNNER_TEMP/gallery-output"
+          printf 'Free: %s\nPro: %s\nWordPress 7.1.5 / WooCommerce 11.3.1 / PHP 8.3\n' "$(git -C free-repo rev-parse HEAD)" "$(git rev-parse HEAD)" > "$RUNNER_TEMP/gallery-output/source.txt"
+      - name: Upload gallery images only (no plugin source or packages)
+        uses: actions/upload-artifact@v4
+        with:
+          name: marketplace-gallery
+          path: |
+            ${{ runner.temp }}/gallery-output/*.png
+            ${{ runner.temp }}/gallery-output/source.txt
+          if-no-files-found: error
+          retention-days: 7
