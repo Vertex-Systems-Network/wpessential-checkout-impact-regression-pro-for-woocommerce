@@ -26,12 +26,12 @@
 2. After vendor approval, create the product in the Vendor Dashboard and upload the Pro ZIP.
 3. Run **QIT** (Quality Insights Toolkit) tests offered in the Vendor Dashboard (activation, security, PHP compatibility, WooCommerce E2E) and fix findings.
 4. Provide listing content: name, short description (use "What Pro adds" above), screenshots (Alerts tab, Reports with export), documentation URL (`https://github.com/Vertex-Systems-Network/wpessential-checkout-impact-regression-for-woocommerce/wiki`), support policy and pricing (open question in the plan).
-5. Add the `Woo:` product header the dashboard gives you after approval to `wpessential-checkout-impact-regression-pro-for-woocommerce.php` (format `Woo: <product_id>:<hash>`) and rebuild – this lets WooCommerce.com deliver updates.
+5. Do not manually add a `Woo:` header; Woo adds it during deployment per the official QIT validation documentation.
 6. Confirm with the review team that requiring the free WordPress.org plugin is acceptable (open question in the plan).
 
 ## Submission identity update (2026-11-26)
 
-Version 1.0.0 uses the current repository slug and shared [documentation wiki](https://github.com/Vertex-Systems-Network/wpessential-checkout-impact-regression-for-woocommerce/wiki). Previous runtime results predate this rename; require fresh CI and vendor QIT. Pro artifacts must not be uploaded while this repository is public. The Marketplace product URI, Woo product header and approval of the free-plugin dependency remain vendor steps.
+Version 1.0.0 uses the current repository slug and shared [documentation wiki](https://github.com/Vertex-Systems-Network/wpessential-checkout-impact-regression-for-woocommerce/wiki). Previous runtime results predate this rename; require fresh CI and vendor QIT. Pro artifacts must not be uploaded while this repository is public. The Marketplace product URI and approval of the free-plugin dependency remain vendor steps. Woo adds its product header during deployment.
 
 ## Main branch verification — 2026-11-26
 
@@ -57,3 +57,7 @@ WordPress 7.0.9 / 7.1.5 and WooCommerce 11.2.2 / 11.3.1 are the current two stab
 | 7.1.5 | 11.3.1 | 8.4.27 | Pass |
 
 PHP lint/contracts and both package builds also passed. Run 45704087895 previously detected an incorrect PHP fallback in the moving-latest tests; corrected blueprint pinning and retained runtime assertions. Update WC tested up to to 11.3; minimums and version remain unchanged. Evidence covers synthetic paired integration in Playground (SQLite), not full checkout E2E, every possible version combination or vendor QIT. Fresh CI on the header-updated packages is required. Pro artifact publication remains blocked while the repository is public.
+
+## Pre-submission handoff update
+
+The owner reports that Free 1.0.0 has been submitted to WordPress.org; approval is still unconfirmed. See [Pro preflight and QIT runner](PRO-PREFLIGHT.md) for exact managed test commands, private distribution steps, proposed commercial/support terms, and completed gallery evidence. Additional paired tests cover JSON export, subscriber/anonymous permissions and uninstall isolation; fresh CI is required. No submission has been initiated for Pro.

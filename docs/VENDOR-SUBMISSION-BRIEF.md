@@ -58,9 +58,11 @@ Use an isolated synthetic test store with outbound mail captured or disabled, an
 - Confirm higher PHP 8.2 floor is acceptable against the published PHP minimum; do not change declared support without proof.
 - Paired runtime matrix for WP 7.0.9/7.1.5 and WC 11.2.2/11.3.1 passed; see submission checklist. QIT remains required.
 - Run all seven required QIT categories: API, E2E, activation, security, PHPCompatibility, malware and validation. Provide paired dependency package in the review setup; no published dependency assumed.
-- Confirm freemium two-submission arrangement, product name and shared wiki URI with Woo. Add the assigned Woo product header after receipt.
+- Confirm freemium two-submission arrangement, product name and shared wiki URI with Woo. Do not manually add a Woo product header; Woo adds it at deployment.
 - Confirm price, vendor account, support policy, and documentation hosting. No pricing assumption or SLA is made here.
-- Capture genuine Pro screenshots from the tested build. Use a 160×160 product icon (keep primary mark within 112×112), choose highlight color, and prepare gallery images at least 896×550. Suggested images: saved report/export, changed field comparison, alert configuration. No fabricated UI imagery or claim of completed assets.
+- Gallery and icon completed: actual 1440×900 screenshots in CI run 45717484812 and icon in marketplace-assets. See PRO-PREFLIGHT.md for the artifact and review notes.
 - Keep Pro distribution private per D-025. Build with `FREE_DIR=/path/to/free ./bin/build.sh` in an authorized local checkout or use private CI artifacts. Do not publish a Pro ZIP publicly.
 
 References: [Submission checklist](https://developer.woocommerce.com/docs/woo-marketplace/submitting-your-product/), [Product page content and assets](https://developer.woocommerce.com/docs/woo-marketplace/product-page-content-and-assets/), [Extension header guidance](https://developer.woocommerce.com/docs/extensions/getting-started-extensions/how-to-design-a-simple-extension/).
+
+See [Pro preflight](PRO-PREFLIGHT.md) for the managed QIT runner and proposed pricing/support terms (not approved).

@@ -23,3 +23,7 @@ Both header-update PR CI runs passed (Free 45707151928, Pro 45707442343); Pro ma
 ## Automated capture
 
 Run **Capture actual Woo Marketplace gallery** in GitHub Actions. The job uses a temporary local MariaDB store, actual built plugin files, blocked outbound mail and Playwright Chromium. The uploaded artifact contains only the three PNG screenshots and source revision metadata. No Pro ZIP, source, database or credentials are uploaded. Inspect images before using them in the vendor listing. The workflow remains unverified until a successful run and visual inspection.
+
+## Verified gallery evidence
+
+[Capture run 45717484812](https://github.com/Vertex-Systems-Network/wpessential-checkout-impact-regression-pro-for-woocommerce/actions/runs/45717484812) completed successfully; artifact 15070851497 contains the three real screenshots. Visual inspection recorded in PR #9; use expanded comparison as primary image. Rerun if artifact expires.
