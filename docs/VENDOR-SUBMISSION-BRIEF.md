@@ -9,7 +9,7 @@ Draft for the vendor dashboard. This is submission material, not an approved lis
 - Version: 1.0.0
 - Product URI requested by owner: https://github.com/Vertex-Systems-Network/wpessential-checkout-impact-regression-for-woocommerce/wiki
 - Required dependency: WPEssential Checkout Impact Regression for WooCommerce 1.0.0 or newer, plus WooCommerce.
-- Declared minimums: WordPress 6.9, WooCommerce 10.8, PHP 8.2. Tested-up-to headers: WordPress 7.1, WooCommerce 11.2. These declarations are not proof of every version combination.
+- Declared minimums: WordPress 6.9, WooCommerce 10.8, PHP 8.2. Tested-up-to headers: WordPress 7.1, WooCommerce 11.3. These declarations are not proof of every version combination.
 
 ## Short description
 
@@ -56,7 +56,7 @@ Use an isolated synthetic test store with outbound mail captured or disabled, an
 ## Marketplace acceptance gates
 
 - Confirm higher PHP 8.2 floor is acceptable against the published PHP minimum; do not change declared support without proof.
-- Test the two current major releases of WordPress and WooCommerce, and record exact versions and results.
+- Paired runtime matrix for WP 7.0.9/7.1.5 and WC 11.2.2/11.3.1 passed; see submission checklist. QIT remains required.
 - Run all seven required QIT categories: API, E2E, activation, security, PHPCompatibility, malware and validation. Provide paired dependency package in the review setup; no published dependency assumed.
 - Confirm freemium two-submission arrangement, product name and shared wiki URI with Woo. Add the assigned Woo product header after receipt.
 - Confirm price, vendor account, support policy, and documentation hosting. No pricing assumption or SLA is made here.

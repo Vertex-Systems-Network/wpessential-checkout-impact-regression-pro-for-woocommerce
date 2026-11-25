@@ -13,7 +13,7 @@
  * License URI:          https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:          wpessential-checkout-impact-regression-pro-for-woocommerce
  * WC requires at least: 10.8
- * WC tested up to:      11.2
+ * WC tested up to:      11.3
  *
  * @package WPEssential\CheckoutImpactRegressionPro
  */
