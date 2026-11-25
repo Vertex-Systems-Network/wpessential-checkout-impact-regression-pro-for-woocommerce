@@ -29,6 +29,16 @@ $check   = static function ( $condition, $message ) use ( &$results, $result_fil
 	$results[] = 'PASS ' . $message;
 };
 
+// Record the installed runtime, not just the requested test matrix.
+$expected = $GLOBALS['wpecir_expected_versions'] ?? array( '', '', '' );
+$actual_wp = get_bloginfo( 'version' );
+$actual_wc = defined( 'WC_VERSION' ) ? WC_VERSION : 'not loaded';
+$actual_php = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
+$results[] = 'Runtime: WP ' . $actual_wp . ' / WC ' . $actual_wc . ' / PHP ' . PHP_VERSION;
+$check( '' === $expected[0] || $expected[0] === $actual_wp, 'requested WordPress patch version is installed' );
+$check( '' === $expected[1] || $expected[1] === $actual_wc, 'requested WooCommerce patch version is installed' );
+$check( '' === $expected[2] || $expected[2] === $actual_php, 'requested PHP minor version is running' );
+
 wp_set_current_user( 1 );
 
 $check( is_plugin_active( 'woocommerce/woocommerce.php' ), 'WooCommerce is active' );
