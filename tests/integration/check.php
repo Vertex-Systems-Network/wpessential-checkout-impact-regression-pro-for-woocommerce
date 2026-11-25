@@ -88,6 +88,15 @@ $csv             = 200 === $export_response->get_status() ? (string) $export_res
 $check( 1 === (int) $export_response->get_data()['count'] && 0 === strpos( $csv, '"report_id"' ), 'Pro export returns the saved report' );
 $check( false !== strpos( $csv, '"' . $report_id . '",' ) && false !== strpos( $csv, '"shipping_cost","EUR 4.9","EUR 12.5","changed"' ), 'exported CSV contains the report\'s before/after values and result' );
 
+$json_request = new WP_REST_Request( 'GET', '/wpecir-pro/v1/scenarios/' . $scenario_id . '/export' );
+$json_request->set_param( 'format', 'json' );
+$json_response = rest_do_request( $json_request );
+$check( 200 === $json_response->get_status(), 'JSON export returns success' );
+$json_data = $json_response->get_data();
+$decoded = json_decode( $json_data['content'], true );
+$check( 'application/json' === $json_data['mime'] && 1 === (int) $json_data['count'] && is_array( $decoded ) && $scenario_id === (int) $decoded['scenario']['id'] && $report_id === (int) $decoded['reports'][0]['id'], 'JSON export contains exactly the selected scenario and saved report' );
+$check( 'changed' === $decoded['reports'][0]['changes']['shipping_cost']['state'], 'JSON export contains changed shipping cost result' );
+
 \WPEssential\CheckoutImpactRegressionPro\Alerts::update( true, 'ops@example.test, qa@example.test' );
 delete_option( \WPEssential\CheckoutImpactRegressionPro\Alerts::QUEUE_OPTION );
 $secret_title = 'COD secret ' . wp_rand();
@@ -110,8 +119,23 @@ $check( false !== strpos( (string) $mail['message'], 'woocommerce_cod_settings' 
 $check( false === strpos( (string) $mail['message'], $secret_title ), 'digest does not include setting values' );
 $check( ! get_option( \WPEssential\CheckoutImpactRegressionPro\Alerts::QUEUE_OPTION ), 'sent events are removed from the queue' );
 
-wp_set_current_user( 0 );
-$check( in_array( rest_do_request( new WP_REST_Request( 'GET', '/wpecir-pro/v1/alerts' ) )->get_status(), array( 401, 403 ), true ), 'Pro REST is closed to anonymous users' );
+$subscriber = wp_insert_user( array( 'user_login' => 'gallery-test-subscriber-' . wp_rand(), 'user_pass' => wp_generate_password( 24 ), 'role' => 'subscriber' ) );
+$check( ! is_wp_error( $subscriber ), 'synthetic subscriber created' );
+foreach ( array( 0, $subscriber ) as $user_id ) {
+	wp_set_current_user( $user_id );
+	$actor = $user_id ? 'subscriber' : 'anonymous';
+	$denied_write = new WP_REST_Request( 'POST', '/wpecir-pro/v1/alerts' );
+	$denied_write->set_body_params( array( 'enabled' => false, 'recipients' => 'denied@example.test' ) );
+	foreach ( array( new WP_REST_Request( 'GET', '/wpecir-pro/v1/alerts' ), $denied_write, $json_request ) as $denied ) {
+		// New request instance: avoid cached attributes from a previous dispatch.
+		$probe = new WP_REST_Request( $denied->get_method(), $denied->get_route() );
+		$probe->set_body_params( $denied->get_body_params() );
+		$probe->set_query_params( $denied->get_query_params() );
+		$check( in_array( rest_do_request( $probe )->get_status(), array( 401, 403 ), true ), 'Pro REST denies ' . $actor . ' ' . $probe->get_method() . ' ' . $probe->get_route() );
+	}
+}
+wp_set_current_user( 1 );
+$check( true === \WPEssential\CheckoutImpactRegressionPro\Alerts::settings()['enabled'], 'denied requests did not disable alerts' );
 
 // Pro must not run without the free plugin.
 wp_set_current_user( 1 );
@@ -124,5 +148,21 @@ $attempt = activate_plugin( $pro_file );
 $check( is_wp_error( $attempt ) && ! is_plugin_active( $pro_file ), 'Pro cannot be activated without the free plugin (' . ( is_wp_error( $attempt ) ? $attempt->get_error_code() : 'activated' ) . ')' );
 activate_plugin( $free_file );
 $check( ! is_wp_error( activate_plugin( $pro_file ) ) && is_plugin_active( $pro_file ), 'Pro activates once the free plugin is active' );
+
+// Verify uninstall isolation by running the actual uninstall entrypoint in this disposable store.
+deactivate_plugins( $pro_file );
+update_option( 'wpecir_pro_alert_queue', array( 123 ) );
+update_option( 'wpecir_pro_alert_attempts', 1 );
+update_option( 'wpecir_pro_alert_last_failure', 'synthetic' );
+wp_schedule_single_event( time() + 900, 'wpecir_pro_send_alert_digest' );
+define( 'WP_UNINSTALL_PLUGIN', $pro_file );
+require WP_PLUGIN_DIR . '/' . dirname( $pro_file ) . '/uninstall.php';
+foreach ( array( 'wpecir_pro_alerts', 'wpecir_pro_alert_queue', 'wpecir_pro_alert_attempts', 'wpecir_pro_alert_last_failure' ) as $option ) {
+	$check( false === get_option( $option ), 'uninstall deletes ' . $option );
+}
+$check( false === wp_next_scheduled( 'wpecir_pro_send_alert_digest' ), 'uninstall clears Pro cron' );
+$remaining = rest_do_request( new WP_REST_Request( 'GET', '/wpecir/v1/scenarios/' . $scenario_id . '/comparisons' ) );
+$check( 200 === $remaining->get_status() && $report_id === (int) $remaining->get_data()['reports'][0]['id'], 'Free report survives Pro uninstall' );
+$check( is_plugin_active( $free_file ), 'Free remains active after Pro uninstall' );
 
 file_put_contents( $result_file, implode( "\n", $results ) . "\nINTEGRATION OK\n" );

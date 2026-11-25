@@ -55,3 +55,7 @@ GPL-2.0-or-later. See [LICENSE](LICENSE).
 Version 1.0.0 uses the current repository slug and shared [documentation wiki](https://github.com/Vertex-Systems-Network/wpessential-checkout-impact-regression-for-woocommerce/wiki). Previous runtime results predate this rename; require fresh CI and vendor QIT. Pro artifacts must not be uploaded while this repository is public. The Marketplace product URI, Woo product header and approval of the free-plugin dependency remain vendor steps.
 
 Paired runtime compatibility through WooCommerce 11.3.1 was verified in [CI run 45705094936](https://github.com/Vertex-Systems-Network/wpessential-checkout-impact-regression-pro-for-woocommerce/actions/runs/45705094936); see submission documentation for exact combinations and scope.
+
+## Pre-submission QIT
+
+See [Pro preflight](docs/PRO-PREFLIGHT.md) for the managed test runner, latest gallery evidence, private package distribution and owner decisions. Free 1.0.0 has been submitted to WordPress.org according to the owner; approval is unconfirmed.
