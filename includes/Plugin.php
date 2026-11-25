@@ -50,7 +50,7 @@ final class Plugin {
 		}
 		printf(
 			'<div class="notice notice-error"><p>%s</p></div>',
-			esc_html__( 'Checkout Impact Regression Pro needs the free Checkout Impact Regression for WooCommerce plugin. Install and activate it first.', 'checkout-impact-regression-pro-for-woocommerce' )
+			esc_html__( 'Checkout Impact Regression Pro needs the free WPEssential Checkout Impact Regression for WooCommerce plugin. Install and activate it first.', 'wpessential-checkout-impact-regression-pro-for-woocommerce' )
 		);
 	}
 
@@ -68,7 +68,7 @@ final class Plugin {
 			esc_html(
 				sprintf(
 					/* translators: %s: required free plugin version. */
-					__( 'Checkout Impact Regression Pro needs Checkout Impact Regression for WooCommerce %s or newer. Update the free plugin to use Pro features.', 'checkout-impact-regression-pro-for-woocommerce' ),
+					__( 'Checkout Impact Regression Pro needs WPEssential Checkout Impact Regression for WooCommerce %s or newer. Update the free plugin to use Pro features.', 'wpessential-checkout-impact-regression-pro-for-woocommerce' ),
 					WPECIR_PRO_MIN_FREE_VERSION
 				)
 			)
@@ -84,7 +84,7 @@ final class Plugin {
 		if ( current_user_can( 'manage_woocommerce' ) || current_user_can( 'manage_options' ) ) {
 			return true;
 		}
-		return new \WP_Error( 'wpecir_pro_forbidden', __( 'You are not allowed to do this.', 'checkout-impact-regression-pro-for-woocommerce' ), array( 'status' => 403 ) );
+		return new \WP_Error( 'wpecir_pro_forbidden', __( 'You are not allowed to do this.', 'wpessential-checkout-impact-regression-pro-for-woocommerce' ), array( 'status' => 403 ) );
 	}
 
 	/**
@@ -147,7 +147,7 @@ final class Plugin {
 		}
 		$path = WPECIR_PRO_PATH . 'assets/pro.js';
 		wp_enqueue_script( 'wpecir-pro', WPECIR_PRO_URL . 'assets/pro.js', array( 'wp-element', 'wp-i18n', 'wp-api-fetch', 'wp-hooks' ), is_readable( $path ) ? (string) filemtime( $path ) : WPECIR_PRO_VERSION, true );
-		wp_set_script_translations( 'wpecir-pro', 'checkout-impact-regression-pro-for-woocommerce' );
+		wp_set_script_translations( 'wpecir-pro', 'wpessential-checkout-impact-regression-pro-for-woocommerce' );
 		// The free app must render after Pro has registered its filters.
 		$free = wp_scripts()->query( 'wpecir-admin' );
 		if ( $free && ! in_array( 'wpecir-pro', $free->deps, true ) ) {

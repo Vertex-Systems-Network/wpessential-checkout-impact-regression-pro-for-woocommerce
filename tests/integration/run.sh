@@ -18,8 +18,8 @@ json.dump(b,open(sys.argv[2],'w'))
 PY
 fi
 ARGS=(--php="$PHP_VERSION" --blueprint="$BLUEPRINT"
-	--mount="$FREE:/wordpress/wp-content/plugins/checkout-impact-regression-for-woocommerce"
-	--mount="$PRO:/wordpress/wp-content/plugins/checkout-impact-regression-pro-for-woocommerce"
+	--mount="$FREE:/wordpress/wp-content/plugins/wpessential-checkout-impact-regression-for-woocommerce"
+	--mount="$PRO:/wordpress/wp-content/plugins/wpessential-checkout-impact-regression-pro-for-woocommerce"
 	--mount="$HERE:/integration")
 if [ -n "${PLAYGROUND_WP_DIR:-}" ]; then ARGS+=(--auto-mount="$PLAYGROUND_WP_DIR"); fi
 rm -f "$HERE/result.txt"

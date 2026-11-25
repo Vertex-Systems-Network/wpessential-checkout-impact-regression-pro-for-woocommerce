@@ -3,8 +3,8 @@
   "login": true,
   "steps": [
     { "step": "installPlugin", "pluginData": { "resource": "wordpress.org/plugins", "slug": "woocommerce" }, "options": { "activate": true } },
-    { "step": "activatePlugin", "pluginPath": "checkout-impact-regression-for-woocommerce/checkout-impact-regression-for-woocommerce.php" },
-    { "step": "activatePlugin", "pluginPath": "checkout-impact-regression-pro-for-woocommerce/checkout-impact-regression-pro-for-woocommerce.php" },
+    { "step": "activatePlugin", "pluginPath": "wpessential-checkout-impact-regression-for-woocommerce/wpessential-checkout-impact-regression-for-woocommerce.php" },
+    { "step": "activatePlugin", "pluginPath": "wpessential-checkout-impact-regression-pro-for-woocommerce/wpessential-checkout-impact-regression-pro-for-woocommerce.php" },
     { "step": "runPHP", "code": "<?php require '/integration/check.php';" }
   ]
 }

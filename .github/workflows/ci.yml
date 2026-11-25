@@ -23,7 +23,7 @@ permissions:
   contents: read
 
 env:
-  FREE_REPO: Vertex-Systems-Network/checkout-impact-regression-for-woocommerce
+  FREE_REPO: Vertex-Systems-Network/wpessential-checkout-impact-regression-for-woocommerce
 
 jobs:
   test:
@@ -136,7 +136,7 @@ jobs:
       - name: Build both in this job (nothing is uploaded) and run the integration check
         run: |
           FREE_DIR=free-repo ./bin/build.sh >/dev/null
-          tests/integration/run.sh free-repo/build/checkout-impact-regression-for-woocommerce build/checkout-impact-regression-pro-for-woocommerce ${{ matrix.php }}
+          tests/integration/run.sh free-repo/build/wpessential-checkout-impact-regression-for-woocommerce build/wpessential-checkout-impact-regression-pro-for-woocommerce ${{ matrix.php }}
 
   notify-free:
     name: Ask the free repository to re-test

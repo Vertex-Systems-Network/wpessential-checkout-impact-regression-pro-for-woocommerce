@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Builds dist/checkout-impact-regression-pro-for-woocommerce-<version>.zip (WooCommerce Marketplace).
+# Builds dist/wpessential-checkout-impact-regression-pro-for-woocommerce-<version>.zip (WooCommerce Marketplace).
 # Pro only works together with the free plugin, so by default this also builds the
-# free ZIP from FREE_DIR (a checkout of checkout-impact-regression-for-woocommerce,
-# default ../checkout-impact-regression-for-woocommerce) into the same dist/.
+# free ZIP from FREE_DIR (a checkout of wpessential-checkout-impact-regression-for-woocommerce,
+# default ../wpessential-checkout-impact-regression-for-woocommerce) into the same dist/.
 #   bin/build.sh             Pro + free
 #   bin/build.sh --pro-only  Pro only (used by the free repository's build)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-SLUG=checkout-impact-regression-pro-for-woocommerce
-FREE_DIR="${FREE_DIR:-../checkout-impact-regression-for-woocommerce}"
+SLUG=wpessential-checkout-impact-regression-pro-for-woocommerce
+FREE_DIR="${FREE_DIR:-../wpessential-checkout-impact-regression-for-woocommerce}"
 version() { grep -m1 -E '^\s*\*\s*Version:' "$1" | sed -E 's/.*Version:\s*//' | tr -d '[:space:]'; }
 VERSION=$(version "$SLUG.php")
 CONST=$(grep -oE "WPECIR_PRO_VERSION', '[^']+'" "$SLUG.php" | grep -oE "[0-9][^']*")
@@ -30,6 +30,6 @@ if [ "${1:-}" != "--pro-only" ]; then
 	[ -x "$FREE_DIR/bin/build.sh" ] || { echo "Free plugin checkout not found at $FREE_DIR (set FREE_DIR)."; exit 1; }
 	FREE_DIR=$(realpath "$FREE_DIR")
 	"$FREE_DIR/bin/build.sh" >/dev/null
-	cp "$FREE_DIR"/dist/checkout-impact-regression-for-woocommerce-*.zip* dist/
+	cp "$FREE_DIR"/dist/wpessential-checkout-impact-regression-for-woocommerce-*.zip* dist/
 fi
 ls -lh dist

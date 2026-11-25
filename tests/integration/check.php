@@ -32,8 +32,8 @@ $check   = static function ( $condition, $message ) use ( &$results, $result_fil
 wp_set_current_user( 1 );
 
 $check( is_plugin_active( 'woocommerce/woocommerce.php' ), 'WooCommerce is active' );
-$check( is_plugin_active( 'checkout-impact-regression-for-woocommerce/checkout-impact-regression-for-woocommerce.php' ), 'free plugin is active' );
-$check( is_plugin_active( 'checkout-impact-regression-pro-for-woocommerce/checkout-impact-regression-pro-for-woocommerce.php' ), 'Pro plugin is active' );
+$check( is_plugin_active( 'wpessential-checkout-impact-regression-for-woocommerce/wpessential-checkout-impact-regression-for-woocommerce.php' ), 'free plugin is active' );
+$check( is_plugin_active( 'wpessential-checkout-impact-regression-pro-for-woocommerce/wpessential-checkout-impact-regression-pro-for-woocommerce.php' ), 'Pro plugin is active' );
 $check( did_action( 'wpecir_loaded' ) > 0 && defined( 'WPECIR_VERSION' ) && defined( 'WPECIR_PRO_VERSION' ), 'free loaded before Pro booted' );
 $check( true === apply_filters( 'wpecir_pro_active', false ), 'Pro registered itself with the free plugin' );
 $check( version_compare( WPECIR_VERSION, WPECIR_PRO_MIN_FREE_VERSION, '>=' ), 'free version satisfies Pro minimum' );
@@ -105,8 +105,8 @@ $check( in_array( rest_do_request( new WP_REST_Request( 'GET', '/wpecir-pro/v1/a
 
 // Pro must not run without the free plugin.
 wp_set_current_user( 1 );
-$pro_file  = 'checkout-impact-regression-pro-for-woocommerce/checkout-impact-regression-pro-for-woocommerce.php';
-$free_file = 'checkout-impact-regression-for-woocommerce/checkout-impact-regression-for-woocommerce.php';
+$pro_file  = 'wpessential-checkout-impact-regression-pro-for-woocommerce/wpessential-checkout-impact-regression-pro-for-woocommerce.php';
+$free_file = 'wpessential-checkout-impact-regression-for-woocommerce/wpessential-checkout-impact-regression-for-woocommerce.php';
 WP_Plugin_Dependencies::initialize();
 $check( WP_Plugin_Dependencies::has_active_dependents( $free_file ), 'WordPress lists Pro as an active dependent of the free plugin (free cannot be deactivated from the Plugins screen)' );
 deactivate_plugins( array( $pro_file, $free_file ), true );
