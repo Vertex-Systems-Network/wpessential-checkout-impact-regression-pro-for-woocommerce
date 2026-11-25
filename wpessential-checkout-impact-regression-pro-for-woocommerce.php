@@ -1,17 +1,17 @@
 <?php
 /**
- * Plugin Name:          Checkout Impact Regression Pro for WooCommerce
- * Plugin URI:           https://wpessential.org/plugins/checkout-impact-regression-pro-for-woocommerce
- * Description:          Adds change alerts by email and CSV/JSON report export to Checkout Impact Regression for WooCommerce.
+ * Plugin Name:          WPEssential Checkout Impact Regression Pro for WooCommerce
+ * Plugin URI:           https://github.com/Vertex-Systems-Network/wpessential-checkout-impact-regression-for-woocommerce/wiki
+ * Description:          Adds change alerts by email and CSV/JSON report export to WPEssential Checkout Impact Regression for WooCommerce.
  * Version:              1.0.0
  * Requires at least:    6.9
  * Requires PHP:         8.2
- * Requires Plugins:     woocommerce, checkout-impact-regression-for-woocommerce
+ * Requires Plugins:     woocommerce, wpessential-checkout-impact-regression-for-woocommerce
  * Author:               WPEssential
  * Author URI:           https://wpessential.org
  * License:              GPL-2.0-or-later
  * License URI:          https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:          checkout-impact-regression-pro-for-woocommerce
+ * Text Domain:          wpessential-checkout-impact-regression-pro-for-woocommerce
  * WC requires at least: 10.8
  * WC tested up to:      11.2
  *

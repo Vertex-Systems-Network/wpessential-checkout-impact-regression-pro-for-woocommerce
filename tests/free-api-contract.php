@@ -7,14 +7,14 @@
  * CI: a free change that breaks Pro, or a Pro change that needs something the
  * free plugin does not provide, fails the build.
  *
- * Usage: FREE_DIR=/path/to/checkout-impact-regression-for-woocommerce php tests/free-api-contract.php
+ * Usage: FREE_DIR=/path/to/wpessential-checkout-impact-regression-for-woocommerce php tests/free-api-contract.php
  *
  * @package WPEssential\CheckoutImpactRegressionPro
  */
 
-$free = getenv( 'FREE_DIR' ) ?: dirname( __DIR__, 2 ) . '/checkout-impact-regression-for-woocommerce';
+$free = getenv( 'FREE_DIR' ) ?: dirname( __DIR__, 2 ) . '/wpessential-checkout-impact-regression-for-woocommerce';
 $pro  = dirname( __DIR__ );
-if ( ! is_file( $free . '/checkout-impact-regression-for-woocommerce.php' ) ) {
+if ( ! is_file( $free . '/wpessential-checkout-impact-regression-for-woocommerce.php' ) ) {
 	fwrite( STDERR, "Free plugin not found. Set FREE_DIR.\n" );
 	exit( 2 );
 }
@@ -30,13 +30,13 @@ $read = static function ( $path ) {
 	return is_file( $path ) ? (string) file_get_contents( $path ) : '';
 };
 
-$main     = $read( $free . '/checkout-impact-regression-for-woocommerce.php' );
+$main     = $read( $free . '/wpessential-checkout-impact-regression-for-woocommerce.php' );
 $repo     = $read( $free . '/includes/Storage/Repository.php' );
 $schema   = $read( $free . '/includes/Storage/Schema.php' );
 $admin    = $read( $free . '/includes/Admin/AdminPage.php' );
 $admin_js = $read( $free . '/assets/js/admin.js' );
 $css      = $read( $free . '/assets/css/admin.css' );
-$pro_main = $read( $pro . '/checkout-impact-regression-pro-for-woocommerce.php' );
+$pro_main = $read( $pro . '/wpessential-checkout-impact-regression-pro-for-woocommerce.php' );
 $pro_js   = $read( $pro . '/assets/pro.js' );
 
 // Versions.
@@ -47,7 +47,7 @@ api_check( ! empty( $min_free[1] ), 'Pro defines WPECIR_PRO_MIN_FREE_VERSION' );
 if ( ! empty( $free_version[1] ) && ! empty( $min_free[1] ) ) {
 	api_check( version_compare( $free_version[1], $min_free[1], '>=' ), "free {$free_version[1]} satisfies Pro minimum {$min_free[1]}" );
 }
-api_check( false !== strpos( $pro_main, 'Requires Plugins:     woocommerce, checkout-impact-regression-for-woocommerce' ), 'Pro header requires the free plugin slug' );
+api_check( false !== strpos( $pro_main, 'Requires Plugins:     woocommerce, wpessential-checkout-impact-regression-for-woocommerce' ), 'Pro header requires the free plugin slug' );
 
 // PHP hooks Pro listens to or calls.
 api_check( false !== strpos( $main, "do_action( 'wpecir_loaded'" ), 'free fires wpecir_loaded after loading' );
