@@ -28,8 +28,8 @@ with open(source) as stream:
 if offline == '1':
     b['steps'] = [s for s in b['steps'] if s['step'] != 'installPlugin']
     b['steps'].insert(0, {'step': 'activatePlugin', 'pluginPath': 'woocommerce/woocommerce.php'})
+b['preferredVersions'] = {'php': php, 'wp': wp or 'latest'}
 if wp:
-    b['preferredVersions'] = {'php': php, 'wp': wp}
     for step in b['steps']:
         if step['step'] == 'installPlugin':
             step['pluginData'] = {'resource': 'url', 'url': f'https://downloads.wordpress.org/plugin/woocommerce.{wc}.zip'}
