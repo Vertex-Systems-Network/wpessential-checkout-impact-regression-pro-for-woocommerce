@@ -36,3 +36,11 @@ The script passes the actual ZIP, records local logs and checksums, does not pub
 - Draft support scope: installation and activation, alert/export functionality, reproducible defects and supported versions; exclude bespoke customization, live checkout debugging outside plugin scope, unrelated third-party configurations. Route support through Woo Marketplace support after listing. No response-time or refund promises beyond the applicable Woo policy; confirm owner can meet Woo's required support commitments.
 
 The final decision, vendor account, managed QIT execution, dependency acceptance and publication are not marked complete.
+
+## QIT CLI contract and latest regression evidence
+
+The [activation CLI](https://qit.woo.com/docs/managed-tests/activation/) uses `--plugin` for additional dependencies; [Woo API](https://qit.woo.com/docs/managed-tests/woo-api/) and [Woo E2E](https://qit.woo.com/docs/managed-tests/woo-e2e/) use `--additional_plugins`. The runner defaults to supported stable WP/Woo aliases; optional QIT_WP_VERSION and QIT_WOO_VERSION can select an available version supported by the installed CLI. Record the exact resolved versions. Activation may require a working Docker environment; follow the installed CLI help. The CLI contract test uses a stub QIT executable to verify arguments, mode gating, checksum and failure propagation without authentication or sending plugin data. This is not an official QIT pass.
+
+[CI run 45722897239](https://github.com/Vertex-Systems-Network/wpessential-checkout-impact-regression-pro-for-woocommerce/actions/runs/45722897239) passed all six paired runtime combinations, including JSON export, anonymous/subscriber REST access restrictions, denied writes, uninstall cleanup and Free report retention. PHP lint and contracts on 8.2/8.3/8.4 and ZIP builds passed. Fresh CI is required for the CLI contract change. No QIT account or directory approval was verified.
+
+Support handoff: the owner must configure a monitored support email in Woo Partner Dashboard > Settings > Store, set a non-promotional receipt autoresponder, handle reviews and feature requests, and follow the applicable Woo support policy. See https://developer.woocommerce.com/docs/woo-marketplace/support-guidelines/. These are operational commitments, not code changes; no contact address or SLA is assumed.
