@@ -68,6 +68,8 @@ jobs:
         run: php tools/readme-to-txt.php --check
       - name: Pro tests
         run: php tests/pro-contract.php
+      - name: QIT runner CLI contract (mock, no network)
+        run: bash tests/qit-runner-contract.sh
       - name: Free plugin still provides everything Pro uses
         run: FREE_DIR=free-repo php tests/free-api-contract.php
 
