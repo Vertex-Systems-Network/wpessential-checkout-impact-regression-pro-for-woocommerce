@@ -5,7 +5,7 @@ By [WPEssential](https://wpessential.org) · Plugin page: <https://wpessential.o
 Paid add-on (WooCommerce Marketplace) for the free **[WPEssential Checkout Impact Regression for WooCommerce](https://github.com/Vertex-Systems-Network/wpessential-checkout-impact-regression-for-woocommerce)** plugin (WordPress.org).
 
 - **Change alerts:** one email digest when a plugin update or a payment/shipping setting change is recorded (15-minute batching, up to 5 recipients, retries, no setting values in mail).
-- **Report export:** CSV and JSON for every saved comparison report of a scenario.
+- **Report export:** CSV and JSON for up to the 2,000 newest unexpired comparison reports of a scenario; the interface discloses the limit and indicates truncation.
 
 ## Free + Pro: how they fit together
 

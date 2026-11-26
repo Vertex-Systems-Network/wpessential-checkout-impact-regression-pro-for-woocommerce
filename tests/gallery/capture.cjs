@@ -38,6 +38,7 @@ const path = require('node:path');
     const json = page.getByRole('button', { name: 'Export JSON', exact: true });
     await page.waitForFunction(() => [...document.querySelectorAll('.wpecir-pro-export button')].length === 2 && [...document.querySelectorAll('.wpecir-pro-export button')].every(b => !b.disabled));
     assert(await csv.isEnabled() && await json.isEnabled());
+    await page.getByText('Exports include up to the 2,000 newest unexpired reports.', {exact:true}).waitFor();
     // Browser downloads must contain the actual seeded comparison, not just visible buttons.
     const [csvFile] = await Promise.all([page.waitForEvent('download'), csv.click()]);
     assert(csvFile.suggestedFilename().endsWith('.csv'));

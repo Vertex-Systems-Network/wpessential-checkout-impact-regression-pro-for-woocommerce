@@ -97,6 +97,7 @@ $json_request->set_param( 'format', 'json' );
 $json_response = rest_do_request( $json_request );
 $check( 200 === $json_response->get_status(), 'JSON export returns success' );
 $json_data = $json_response->get_data();
+$check( false === $json_data['truncated'] && 2000 === $json_data['limit'], 'small JSON export is not truncated and discloses limit' );
 $decoded = json_decode( $json_data['content'], true );
 $check( 'application/json' === $json_data['mime'] && 1 === (int) $json_data['count'] && is_array( $decoded ) && $scenario_id === (int) $decoded['scenario']['id'] && $report_id === (int) $decoded['reports'][0]['id'], 'JSON export contains exactly the selected scenario and saved report' );
 $check( 'changed' === $decoded['reports'][0]['changes']['shipping_cost']['state'], 'JSON export contains changed shipping cost result' );
