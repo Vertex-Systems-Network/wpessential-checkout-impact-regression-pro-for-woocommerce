@@ -13,4 +13,5 @@ delete_option( 'wpecir_pro_alerts' );
 delete_option( 'wpecir_pro_alert_queue' );
 delete_option( 'wpecir_pro_alert_attempts' );
 delete_option( 'wpecir_pro_alert_last_failure' );
+delete_option( 'wpecir_pro_alert_send_lock' );
 wp_clear_scheduled_hook( 'wpecir_pro_send_alert_digest' );

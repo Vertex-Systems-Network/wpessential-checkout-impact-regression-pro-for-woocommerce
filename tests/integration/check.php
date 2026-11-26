@@ -154,10 +154,11 @@ deactivate_plugins( $pro_file );
 update_option( 'wpecir_pro_alert_queue', array( 123 ) );
 update_option( 'wpecir_pro_alert_attempts', 1 );
 update_option( 'wpecir_pro_alert_last_failure', 'synthetic' );
+update_option( 'wpecir_pro_alert_send_lock', '1:synthetic', false );
 wp_schedule_single_event( time() + 900, 'wpecir_pro_send_alert_digest' );
 define( 'WP_UNINSTALL_PLUGIN', $pro_file );
 require WP_PLUGIN_DIR . '/' . dirname( $pro_file ) . '/uninstall.php';
-foreach ( array( 'wpecir_pro_alerts', 'wpecir_pro_alert_queue', 'wpecir_pro_alert_attempts', 'wpecir_pro_alert_last_failure' ) as $option ) {
+foreach ( array( 'wpecir_pro_alerts', 'wpecir_pro_alert_queue', 'wpecir_pro_alert_attempts', 'wpecir_pro_alert_last_failure', 'wpecir_pro_alert_send_lock' ) as $option ) {
 	$check( false === get_option( $option ), 'uninstall deletes ' . $option );
 }
 $check( false === wp_next_scheduled( 'wpecir_pro_send_alert_digest' ), 'uninstall clears Pro cron' );
