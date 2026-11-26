@@ -1,0 +1,99 @@
+name: Advanced QA - third-party activation and conflict matrix
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/third-party-qa.yml'
+      - 'tests/third-party/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native:
+    if: github.event_name == 'workflow_dispatch' || !github.event.repository.private
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        extensions: ['woocommerce-gateway-stripe', 'flexible-shipping', 'polylang', 'query-monitor', 'woocommerce-gateway-stripe flexible-shipping polylang query-monitor']
+    services:
+      mysql:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: qa-local-root
+          MARIADB_DATABASE: stressqa
+          MARIADB_USER: stressqa
+          MARIADB_PASSWORD: qa-local-db
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: Vertex-Systems-Network/wpessential-checkout-impact-regression-for-woocommerce
+          ref: eaed6f7add0f058fb9aa473a41bf5816232a346c
+          path: free-repo
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2, wp-cli
+          extensions: mysqli, mbstring, curl, gd, zip
+          coverage: none
+      - name: Provision isolated native test store
+        run: |
+          set -euo pipefail
+          FREE_DIR=free-repo ./bin/build.sh
+          WP="$RUNNER_TEMP/stress-wp"
+          mkdir -p "$WP"
+          wp --path="$WP" core download --version=7.1.5
+          wp --path="$WP" config create --dbname=stressqa --dbuser=stressqa --dbpass=qa-local-db --dbhost=127.0.0.1:3306
+          wp --path="$WP" config set WPECIR_THIRD_PARTY_QA true --raw
+          wp --path="$WP" config set DISABLE_WP_CRON true --raw
+          wp --path="$WP" core install --url=http://qa.example.test --title="Stress QA" --admin_user=qa-admin --admin_password=qa-local-test-only --admin_email=admin@example.test --skip-email
+          mkdir -p "$WP/wp-content/mu-plugins"
+          printf '%s\n' '<?php add_filter( "pre_wp_mail", "__return_true" );' > "$WP/wp-content/mu-plugins/block-mail.php"
+          wp --path="$WP" plugin install https://downloads.wordpress.org/plugin/woocommerce.11.3.1.zip --activate
+          wp --path="$WP" plugin install "$GITHUB_WORKSPACE/dist/wpessential-checkout-impact-regression-for-woocommerce-1.0.0.zip" --activate
+          wp --path="$WP" plugin install "$GITHUB_WORKSPACE/dist/wpessential-checkout-impact-regression-pro-for-woocommerce-1.0.0.zip" --activate
+          echo "QA_WP=$WP" >> "$GITHUB_ENV"
+          echo "QA_SYNC=$RUNNER_TEMP/qa-sync" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/qa-sync"
+      - name: Install actual public plugins without activating or connecting accounts
+        env:
+          QA_EXTENSIONS: ${{ matrix.extensions }}
+        run: |
+          set -euo pipefail
+          for slug in $QA_EXTENSIONS; do
+            case "$slug" in
+              woocommerce-gateway-stripe) version=11.2.0 ;;
+              flexible-shipping) version=6.13.9 ;;
+              polylang) version=3.9.2 ;;
+              query-monitor) version=4.1.1 ;;
+              *) echo "Unexpected plugin slug"; exit 1 ;;
+            esac
+            wp --path="$QA_WP" plugin install "$slug" --version="$version"
+            test "$(wp --path="$QA_WP" plugin get "$slug" --field=version)" = "$version"
+            wp --path="$QA_WP" plugin get "$slug" --fields=name,version,status --format=json
+          done
+      - name: Block external HTTP and mail before activation and verify coexistence
+        env:
+          QA_EXTENSIONS: ${{ matrix.extensions }}
+        run: |
+          set -euo pipefail
+          cat > "$QA_WP/wp-content/mu-plugins/qa-block-external.php" <<'PHP'
+          <?php
+          add_filter( 'pre_http_request', static function () { return new WP_Error( 'qa_offline', 'External HTTP blocked in disposable QA' ); }, 99 );
+          add_filter( 'pre_wp_mail', '__return_true', 99 );
+          PHP
+          wp --path="$QA_WP" --user=qa-admin eval-file tests/third-party/check.php
+          for slug in $QA_EXTENSIONS; do
+            wp --path="$QA_WP" plugin activate "$slug"
+            wp --path="$QA_WP" plugin get "$slug" --fields=name,version,status --format=json
+          done
+          QA_STAGE=active wp --path="$QA_WP" --user=qa-admin eval-file tests/third-party/check.php
+          for slug in $QA_EXTENSIONS; do
+            wp --path="$QA_WP" plugin deactivate "$slug"
+          done
+          QA_STAGE=deactivated wp --path="$QA_WP" --user=qa-admin eval-file tests/third-party/check.php
