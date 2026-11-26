@@ -13,3 +13,7 @@ Owner requested advanced QA after Free 1.0.0 submission. This is a testing-only 
 | DEV-14 | Official QIT | Blocked by partner access |
 
 These rows are additional QA, not new v1 features and do not change the canonical 30/30 scope count. Browser fixture pins Free main 6d3ec072 and verifies actual saved reports, no real mail. Gallery uploads images only; package publication guard unchanged. Exact version matching accepts 6.9 and 6.9.0 as the same base release only; later patch releases are not accepted. If minimum combinations are unavailable or unsupported, record the failure rather than silently upgrading. 
+
+### Minimum-version correction
+
+Run 45773015300 detected WordPress Playground resolving 6.9 to 6.9.12; the exact-version assertion correctly failed before functional checks. Pin 6.9.12 explicitly in Playground, and add a separate native MariaDB job installing WP 6.9 with WP-CLI and the actual built ZIPs. Both jobs must pass; do not treat the first failed job as product failure or a base-version pass. No production files changed.

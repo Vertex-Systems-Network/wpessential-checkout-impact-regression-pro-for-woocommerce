@@ -1,0 +1,59 @@
+name: Native minimum WordPress integration
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/native-minimum.yml'
+      - 'tests/integration/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  minimum:
+    if: github.event_name == 'workflow_dispatch' || !github.event.repository.private
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: native-local-root
+          MARIADB_DATABASE: nativeqa
+          MARIADB_USER: nativeqa
+          MARIADB_PASSWORD: native-local-db
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: Vertex-Systems-Network/wpessential-checkout-impact-regression-for-woocommerce
+          ref: 6d3ec072eb5eee4fc2be79f6b3134baf6fc789d1
+          path: free-repo
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2, wp-cli
+          extensions: mysqli, mbstring, curl, gd, zip
+          coverage: none
+      - name: Install exact minimum from release archive and test built packages
+        run: |
+          set -euo pipefail
+          FREE_DIR=free-repo ./bin/build.sh
+          WP="$RUNNER_TEMP/native-minimum-wp"
+          mkdir -p "$WP"
+          wp --path="$WP" core download --version=6.9
+          wp --path="$WP" config create --dbname=nativeqa --dbuser=nativeqa --dbpass=native-local-db --dbhost=127.0.0.1:3306
+          wp --path="$WP" config set DISABLE_WP_CRON true --raw
+          wp --path="$WP" config set WP_AUTO_UPDATE_CORE false --raw
+          wp --path="$WP" core install --url=http://127.0.0.1:8080 --title="Native QA" --admin_user=native-admin --admin_password=native-local-test-only --admin_email=admin@example.test --skip-email
+          mkdir -p "$WP/wp-content/mu-plugins"
+          printf '%s\n' '<?php add_filter( "pre_wp_mail", "__return_true" );' > "$WP/wp-content/mu-plugins/block-mail.php"
+          wp --path="$WP" plugin install https://downloads.wordpress.org/plugin/woocommerce.10.8.0.zip --activate
+          wp --path="$WP" plugin install "$GITHUB_WORKSPACE/dist/wpessential-checkout-impact-regression-for-woocommerce-1.0.0.zip" --activate
+          wp --path="$WP" plugin install "$GITHUB_WORKSPACE/dist/wpessential-checkout-impact-regression-pro-for-woocommerce-1.0.0.zip" --activate
+          export WPECIR_TEST_DISPOSABLE=1 WPECIR_TEST_WP_ROOT="$WP" WPECIR_TEST_RESULT="$RUNNER_TEMP/native-result.txt"
+          php -r '$_SERVER["HTTP_HOST"]="127.0.0.1:8080"; $_SERVER["REQUEST_URI"]="/"; $GLOBALS["wpecir_expected_versions"] = array("6.9", "10.8.0", "8.2"); require "tests/integration/check.php";' || { cat "$WPECIR_TEST_RESULT" || true; exit 1; }
+          cat "$WPECIR_TEST_RESULT"
+          grep -qx 'INTEGRATION OK' "$WPECIR_TEST_RESULT"

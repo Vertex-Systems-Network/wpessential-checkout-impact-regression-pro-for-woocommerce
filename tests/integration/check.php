@@ -6,7 +6,7 @@
  * @package WPEssential\CheckoutImpactRegressionPro
  */
 
-$result_file = '/integration/result.txt';
+$result_file = getenv( 'WPECIR_TEST_RESULT' ) ?: '/integration/result.txt';
 @unlink( $result_file );
 register_shutdown_function(
 	static function () use ( $result_file ) {
@@ -16,7 +16,11 @@ register_shutdown_function(
 		}
 	}
 );
-require_once '/wordpress/wp-load.php';
+$native_root = getenv( 'WPECIR_TEST_WP_ROOT' );
+if ( $native_root && '1' !== getenv( 'WPECIR_TEST_DISPOSABLE' ) ) {
+	throw new RuntimeException( 'Native integration requires a disposable-store flag.' );
+}
+require_once ( $native_root ?: '/wordpress' ) . '/wp-load.php';
 require_once ABSPATH . 'wp-admin/includes/plugin.php';
 
 $results = array();
