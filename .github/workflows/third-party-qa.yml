@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: Vertex-Systems-Network/wpessential-checkout-impact-regression-for-woocommerce
-          ref: 6d3ec072eb5eee4fc2be79f6b3134baf6fc789d1
+          ref: eaed6f7add0f058fb9aa473a41bf5816232a346c
           path: free-repo
       - uses: shivammathur/setup-php@v2
         with:
@@ -66,7 +66,15 @@ jobs:
         run: |
           set -euo pipefail
           for slug in $QA_EXTENSIONS; do
-            wp --path="$QA_WP" plugin install "$slug"
+            case "$slug" in
+              woocommerce-gateway-stripe) version=11.2.0 ;;
+              flexible-shipping) version=6.13.9 ;;
+              polylang) version=3.9.2 ;;
+              query-monitor) version=4.1.1 ;;
+              *) echo "Unexpected plugin slug"; exit 1 ;;
+            esac
+            wp --path="$QA_WP" plugin install "$slug" --version="$version"
+            test "$(wp --path="$QA_WP" plugin get "$slug" --field=version)" = "$version"
             wp --path="$QA_WP" plugin get "$slug" --fields=name,version,status --format=json
           done
       - name: Block external HTTP and mail before activation and verify coexistence
