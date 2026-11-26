@@ -1,0 +1,73 @@
+name: Advanced QA - multisite isolation and export pagination
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/multisite-qa.yml'
+      - 'tests/multisite/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  multisite:
+    if: github.event_name == 'workflow_dispatch' || !github.event.repository.private
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: qa-local-root
+          MARIADB_DATABASE: multiqa
+          MARIADB_USER: multiqa
+          MARIADB_PASSWORD: qa-local-db
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: Vertex-Systems-Network/wpessential-checkout-impact-regression-for-woocommerce
+          ref: 6d3ec072eb5eee4fc2be79f6b3134baf6fc789d1
+          path: free-repo
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2, wp-cli
+          extensions: mysqli, mbstring, curl, gd, zip
+          coverage: none
+      - name: Build and install disposable two-site network
+        run: |
+          set -euo pipefail
+          FREE_DIR=free-repo ./bin/build.sh
+          WP="$RUNNER_TEMP/multi-wp"
+          mkdir -p "$WP"
+          wp --path="$WP" core download --version=7.1.5
+          wp --path="$WP" config create --dbname=multiqa --dbuser=multiqa --dbpass=qa-local-db --dbhost=127.0.0.1:3306
+          wp --path="$WP" config set WPECIR_MULTISITE_QA true --raw
+          wp --path="$WP" config set DISABLE_WP_CRON true --raw
+          wp --path="$WP" core multisite-install --url=http://qa.example.test --title="QA network" --admin_user=qa-admin --admin_password=qa-local-test-only --admin_email=admin@example.test --skip-email
+          mkdir -p "$WP/wp-content/mu-plugins"
+          printf '%s\n' '<?php add_filter( "pre_wp_mail", "__return_true" );' > "$WP/wp-content/mu-plugins/block-mail.php"
+          wp --path="$WP" site create --slug=child --title="QA child" --email=admin@example.test
+          wp --path="$WP" plugin install https://downloads.wordpress.org/plugin/woocommerce.11.3.1.zip
+          wp --path="$WP" plugin install "$GITHUB_WORKSPACE/dist/wpessential-checkout-impact-regression-for-woocommerce-1.0.0.zip"
+          wp --path="$WP" plugin install "$GITHUB_WORKSPACE/dist/wpessential-checkout-impact-regression-pro-for-woocommerce-1.0.0.zip"
+          for url in http://qa.example.test http://qa.example.test/child/; do
+            wp --path="$WP" --url="$url" plugin activate woocommerce
+            wp --path="$WP" --url="$url" plugin activate wpessential-checkout-impact-regression-for-woocommerce
+            wp --path="$WP" --url="$url" plugin activate wpessential-checkout-impact-regression-pro-for-woocommerce
+          done
+          echo "QA_WP=$WP" >> "$GITHUB_ENV"
+      - name: Seed and verify each site using separate WordPress processes
+        run: |
+          set -euo pipefail
+          TEST="$GITHUB_WORKSPACE/tests/multisite/check.php"
+          for url in http://qa.example.test http://qa.example.test/child/; do
+            WPECIR_QA_MODE=seed wp --path="$QA_WP" --url="$url" --user=qa-admin eval-file "$TEST"
+          done
+          for url in http://qa.example.test http://qa.example.test/child/; do
+            WPECIR_QA_MODE=verify wp --path="$QA_WP" --url="$url" --user=qa-admin eval-file "$TEST"
+          done
+          echo "MULTISITE AND PAGINATION OK"
