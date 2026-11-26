@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: Vertex-Systems-Network/wpessential-checkout-impact-regression-for-woocommerce
-          ref: e4c03263a4b004e77fc805c23a5a17c600439045
+          ref: 6d3ec072eb5eee4fc2be79f6b3134baf6fc789d1
           path: free-repo
       - uses: shivammathur/setup-php@v2
         with:

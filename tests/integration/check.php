@@ -6,7 +6,7 @@
  * @package WPEssential\CheckoutImpactRegressionPro
  */
 
-$result_file = '/integration/result.txt';
+$result_file = getenv( 'WPECIR_TEST_RESULT' ) ?: '/integration/result.txt';
 @unlink( $result_file );
 register_shutdown_function(
 	static function () use ( $result_file ) {
@@ -16,7 +16,11 @@ register_shutdown_function(
 		}
 	}
 );
-require_once '/wordpress/wp-load.php';
+$native_root = getenv( 'WPECIR_TEST_WP_ROOT' );
+if ( $native_root && '1' !== getenv( 'WPECIR_TEST_DISPOSABLE' ) ) {
+	throw new RuntimeException( 'Native integration requires a disposable-store flag.' );
+}
+require_once ( $native_root ?: '/wordpress' ) . '/wp-load.php';
 require_once ABSPATH . 'wp-admin/includes/plugin.php';
 
 $results = array();
@@ -35,7 +39,7 @@ $actual_wp = get_bloginfo( 'version' );
 $actual_wc = defined( 'WC_VERSION' ) ? WC_VERSION : 'not loaded';
 $actual_php = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
 $results[] = 'Runtime: WP ' . $actual_wp . ' / WC ' . $actual_wc . ' / PHP ' . PHP_VERSION;
-$check( '' === $expected[0] || $expected[0] === $actual_wp, 'requested WordPress patch version is installed' );
+$check( '' === $expected[0] || $expected[0] === $actual_wp || ( $expected[0] . '.0' === $actual_wp && 1 === substr_count( $expected[0], '.' ) ), 'requested WordPress patch version is installed' );
 $check( '' === $expected[1] || $expected[1] === $actual_wc, 'requested WooCommerce patch version is installed' );
 $check( '' === $expected[2] || $expected[2] === $actual_php, 'requested PHP minor version is running' );
 
@@ -118,6 +122,32 @@ $check( is_array( $mail ) && array( 'ops@example.test', 'qa@example.test' ) === 
 $check( false !== strpos( (string) $mail['message'], 'woocommerce_cod_settings' ) && false !== strpos( (string) $mail['message'], 'page=wpessential-checkout-impact' ), 'digest names the changed setting and links to the free screen' );
 $check( false === strpos( (string) $mail['message'], $secret_title ), 'digest does not include setting values' );
 $check( ! get_option( \WPEssential\CheckoutImpactRegressionPro\Alerts::QUEUE_OPTION ), 'sent events are removed from the queue' );
+ 
+// Exercise cron retry transitions without delivering any mail or waiting 15 minutes.
+$alert_class = \WPEssential\CheckoutImpactRegressionPro\Alerts::class;
+update_option( 'woocommerce_cod_settings', array( 'enabled' => 'no', 'title' => 'synthetic retry' ) );
+$retry_queue = get_option( $alert_class::QUEUE_OPTION );
+$check( is_array( $retry_queue ) && ! empty( $retry_queue ), 'retry fixture has a queued change' );
+$force_failure = static function () { return false; };
+add_filter( 'pre_wp_mail', $force_failure, 99 );
+for ( $attempt_no = 1; $attempt_no <= 3; ++$attempt_no ) {
+	// WP Cron removes the current single event before executing its callback.
+	wp_clear_scheduled_hook( $alert_class::HOOK );
+	$check( false === $alert_class::send_digest(), 'mail failure attempt ' . $attempt_no . ' returns false' );
+	$check( $retry_queue === get_option( $alert_class::QUEUE_OPTION ), 'mail failure preserves queued IDs on attempt ' . $attempt_no );
+	if ( $attempt_no < 3 ) {
+		$check( $attempt_no === (int) get_option( $alert_class::ATTEMPTS_OPTION ), 'retry attempt counter ' . $attempt_no );
+		$check( false !== wp_next_scheduled( $alert_class::HOOK ), 'retry cron scheduled after attempt ' . $attempt_no );
+	}
+}
+$check( false === wp_next_scheduled( $alert_class::HOOK ) && ! get_option( $alert_class::ATTEMPTS_OPTION ) && ! empty( $alert_class::settings()['last_failure'] ), 'third failure stops retries and exposes failure status' );
+remove_filter( 'pre_wp_mail', $force_failure, 99 );
+update_option( 'woocommerce_cod_settings', array( 'enabled' => 'yes', 'title' => 'synthetic recovery' ) );
+$check( false !== wp_next_scheduled( $alert_class::HOOK ), 'new change schedules recovery after retry exhaustion' );
+wp_clear_scheduled_hook( $alert_class::HOOK );
+$check( true === $alert_class::send_digest(), 'mail recovery succeeds' );
+$check( ! get_option( $alert_class::QUEUE_OPTION ) && ! get_option( $alert_class::ATTEMPTS_OPTION ) && '' === $alert_class::settings()['last_failure'], 'recovery clears queue, attempts and failure status' );
+
 
 $subscriber = wp_insert_user( array( 'user_login' => 'gallery-test-subscriber-' . wp_rand(), 'user_pass' => wp_generate_password( 24 ), 'role' => 'subscriber' ) );
 $check( ! is_wp_error( $subscriber ), 'synthetic subscriber created' );

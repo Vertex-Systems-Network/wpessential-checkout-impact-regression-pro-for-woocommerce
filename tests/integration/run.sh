@@ -12,7 +12,7 @@ BLUEPRINT="$HERE/blueprint.json"
 WP_VERSION="${TEST_WP_VERSION:-}"
 WC_VERSION="${TEST_WC_VERSION:-}"
 if [[ -n "$WP_VERSION" || -n "$WC_VERSION" ]]; then
-	[[ "$WP_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ && "$WC_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Set both exact WP and WC patch versions"; exit 1; }
+	[[ "$WP_VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ && "$WC_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Set both exact WP release and WC patch versions"; exit 1; }
 fi
 if [[ -n "$WP_VERSION" && ( -n "${PLAYGROUND_WP_DIR:-}" || "${PLAYGROUND_SKIP_WOO_INSTALL:-0}" = 1 ) ]]; then
 	echo "Exact-version matrix cannot use an offline WordPress directory or skip Woo installation"
