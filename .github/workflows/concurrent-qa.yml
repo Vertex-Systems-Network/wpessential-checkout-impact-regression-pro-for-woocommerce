@@ -4,6 +4,7 @@ on:
     paths:
       - '.github/workflows/concurrent-qa.yml'
       - 'tests/stress/**'
+      - 'includes/Export.php'
   workflow_dispatch:
 permissions:
   contents: read

@@ -44,6 +44,17 @@ final class Export {
 			}
 		}
 
+		// Probe one older report only when the cap was reached, to distinguish a
+		// complete 2000-report export from a truncated one.
+		$truncated = false;
+		if ( self::MAX_REPORTS === count( $reports ) ) {
+			$extra = $repository->list_manual_comparisons( $scenario['id'], 1, self::MAX_REPORTS );
+			if ( is_wp_error( $extra ) ) {
+				return $extra;
+			}
+			$truncated = ! empty( $extra );
+		}
+
 		$format   = 'json' === $request->get_param( 'format' ) ? 'json' : 'csv';
 		$filename = 'checkout-impact-' . sanitize_title( $scenario['title'] ) . '-' . gmdate( 'Y-m-d' ) . '.' . $format;
 		$content  = 'json' === $format ? self::to_json( $scenario, $reports ) : self::to_csv( $scenario, $reports );
@@ -54,6 +65,8 @@ final class Export {
 				'mime'     => 'json' === $format ? 'application/json' : 'text/csv',
 				'content'  => $content,
 				'count'    => count( $reports ),
+				'truncated' => $truncated,
+				'limit'     => self::MAX_REPORTS,
 			)
 		);
 	}

@@ -29,10 +29,12 @@
 
 	function ExportButtons( props ) {
 		const [ busy, setBusy ] = useState( '' );
+		const [ truncated, setTruncated ] = useState( false );
 		const run = function ( format ) {
 			setBusy( format );
+			setTruncated( false );
 			wp.apiFetch( { path: API + '/scenarios/' + Number( props.scenarioId ) + '/export?format=' + format } )
-				.then( function ( file ) { download( file.filename, file.mime, file.content ); } )
+				.then( function ( file ) { download( file.filename, file.mime, file.content ); setTruncated( file.truncated === true ); } )
 				.catch( function ( error ) { window.alert( error.message || __( 'Export failed.', 'wpessential-checkout-impact-regression-pro-for-woocommerce' ) ); } )
 				.finally( function () { setBusy( '' ); } );
 		};
@@ -40,7 +42,9 @@
 		return h( 'span', { className: 'wpecir-pro-export' },
 			h( 'button', { type: 'button', className: 'button', disabled: disabled || busy !== '', onClick: function () { run( 'csv' ); } }, busy === 'csv' ? __( 'Exporting…', 'wpessential-checkout-impact-regression-pro-for-woocommerce' ) : __( 'Export CSV', 'wpessential-checkout-impact-regression-pro-for-woocommerce' ) ),
 			' ',
-			h( 'button', { type: 'button', className: 'button', disabled: disabled || busy !== '', onClick: function () { run( 'json' ); } }, busy === 'json' ? __( 'Exporting…', 'wpessential-checkout-impact-regression-pro-for-woocommerce' ) : __( 'Export JSON', 'wpessential-checkout-impact-regression-pro-for-woocommerce' ) )
+			h( 'button', { type: 'button', className: 'button', disabled: disabled || busy !== '', onClick: function () { run( 'json' ); } }, busy === 'json' ? __( 'Exporting…', 'wpessential-checkout-impact-regression-pro-for-woocommerce' ) : __( 'Export JSON', 'wpessential-checkout-impact-regression-pro-for-woocommerce' ) ),
+			h( 'span', { className: 'wpecir-help', style: { display: 'block' } }, __( 'Exports include up to the 2,000 newest unexpired reports.', 'wpessential-checkout-impact-regression-pro-for-woocommerce' ) ),
+			truncated ? h( 'span', { role: 'status', style: { display: 'block' } }, __( 'Older reports were omitted from the last export because the limit was reached.', 'wpessential-checkout-impact-regression-pro-for-woocommerce' ) ) : null
 		);
 	}
 

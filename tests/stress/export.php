@@ -55,7 +55,7 @@ $start = microtime( true );
 $json = stress_rest( 'GET', '/wpecir-pro/v1/scenarios/' . $id . '/export', array( 'format' => 'json' ) );
 $parsed = json_decode( $json['content'], true, 512, JSON_THROW_ON_ERROR );
 $actual = array_map( 'intval', array_column( $parsed['reports'], 'id' ) );
-if ( $expected !== $actual || 2000 !== (int) $json['count'] ) {
+if ( $expected !== $actual || 2000 !== (int) $json['count'] || true !== $json['truncated'] || 2000 !== $json['limit'] ) {
 	throw new RuntimeException( 'JSON cap/order/deduplication failed.' );
 }
 printf( "JSON: %d reports, %d bytes, %.3f s\n", count( $actual ), strlen( $json['content'] ), microtime( true ) - $start );
@@ -71,8 +71,18 @@ while ( false !== ( $row = fgetcsv( $stream, 0, ',', '"', '' ) ) ) {
 	$csv_ids[ (int) $row[0] ] = true;
 }
 fclose( $stream );
-if ( $expected !== array_keys( $csv_ids ) || 2000 !== (int) $csv['count'] ) {
+if ( $expected !== array_keys( $csv_ids ) || 2000 !== (int) $csv['count'] || true !== $csv['truncated'] || 2000 !== $csv['limit'] ) {
 	throw new RuntimeException( 'CSV cap/order/deduplication failed.' );
 }
 printf( "CSV: %d reports, %d bytes, %.3f s; peak PHP allocated bytes %d\n", count( $csv_ids ), strlen( $csv['content'] ), microtime( true ) - $start, memory_get_peak_usage( true ) );
-echo "EXPORT CAP OK (2000 newest of 2001; truncation must be disclosed in product UX if not already)\n";
+// Exactly 2000 eligible rows is not truncated. Expire the oldest synthetic run.
+global $wpdb;
+if ( 1 !== $wpdb->update( $wpdb->prefix . 'wpecir_runs', array( 'expires_at' => '2000-01-01 00:00:00' ), array( 'id' => $ids[0] ) ) ) {
+	throw new RuntimeException( 'Could not expire oldest fixture.' );
+}
+$exact = stress_rest( 'GET', '/wpecir-pro/v1/scenarios/' . $id . '/export', array( 'format' => 'json' ) );
+if ( 2000 !== $exact['count'] || false !== $exact['truncated'] ) {
+	throw new RuntimeException( 'Exact cap falsely reported as truncated.' );
+}
+echo "PASS: exact cap is complete, not truncated\n";
+echo "EXPORT CAP OK (2000 newest of 2001; truncation metadata true)\n";
