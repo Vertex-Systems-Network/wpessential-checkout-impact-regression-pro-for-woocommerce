@@ -59,3 +59,7 @@ Paired runtime compatibility through WooCommerce 11.3.1 was verified in [CI run 
 ## Pre-submission QIT
 
 See [Pro preflight](docs/PRO-PREFLIGHT.md) for the managed test runner, latest gallery evidence, private package distribution and owner decisions. Free 1.0.0 has been submitted to WordPress.org according to the owner; approval is unconfirmed.
+
+## Advanced QA
+
+See [advanced QA backlog and acceptance criteria](docs/ADVANCED-QA.md). Additional testing is separate from the submitted v1 scope; no production code changes.
