@@ -69,6 +69,7 @@ async function probe(page, label, fn) {
             assert(metrics.left>=-2 && metrics.right<=width+2,'app exceeds viewport');
             assert(metrics.scroll<=metrics.client+2,'app overflows horizontally (nested scroll regions permitted)');
             assert.deepEqual(metrics.clipped,[],'controls outside viewport');
+            assert(metrics.documentOverflow<=2,'document overflows horizontally');
           });
           if(width===1440 || width===390){
             await probe(page,name+' '+width+'px '+tab+' axe WCAG A/AA',async()=>{
