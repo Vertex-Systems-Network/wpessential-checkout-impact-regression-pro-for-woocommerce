@@ -19,9 +19,9 @@ fi
 ZIP="$PWD/dist/$SLUG-1.0.0.zip"
 (cd dist && sha256sum -c "$SLUG-1.0.0.zip.sha256")
 OUT="$PWD/qit-results/$(date -u +%Y%m%dT%H%M%SZ)"
+umask 077
 mkdir -p "$OUT"
 chmod 700 "$OUT"
-umask 077
 qit --version > "$OUT/cli-version.txt"
 git rev-parse HEAD > "$OUT/source.txt"
 cp "$ZIP.sha256" "$OUT/"
@@ -40,8 +40,13 @@ if [[ "$MODE" == static || "$MODE" == all ]]; then
   for test in security phpcompatibility malware validation; do run_test "$test" "$test"; done
 fi
 if [[ "$MODE" == runtime || "$MODE" == all ]]; then
-  for test in activation woo-api woo-e2e; do
-    run_test "$test" "$test" --additional_plugins="$FREE_SLUG" --php=8.3 --wp=7.1 --woo=11.3
+  # Activation uses the local environment CLI options; managed API/E2E use additional_plugins.
+  # Stable aliases are supported across QIT releases. Record the resolved versions from reports.
+  WP_VERSION="${QIT_WP_VERSION:-stable}"
+  WOO_VERSION="${QIT_WOO_VERSION:-stable}"
+  run_test activation activation --plugin="$FREE_SLUG" --php=8.3 --wp="$WP_VERSION" --woo="$WOO_VERSION"
+  for test in woo-api woo-e2e; do
+    run_test "$test" "$test" --additional_plugins="$FREE_SLUG" --php=8.3 --wp="$WP_VERSION" --woo="$WOO_VERSION"
   done
 fi
 echo "Local QIT evidence: $OUT"
